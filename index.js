@@ -26,22 +26,23 @@ app.use(express.json());
 app.use(express.urlencoded({extended:true}));
 
 // the logger
-const logger = new Logger({logs: ''});
-const log = { 
+const logStream = { 
   write: line => {
-    logger.logs += line;
-    logger.save().then(() => {}).catch(err => console.log(err));
+    const logger = new Logger({log: line});
+    logger.save().catch(err => console.log(err));
   }
 };
 
 // morgan middleware for logging
-app.use(morgan(':method :url :status :response-time ms', {stream: log}));
+app.use(morgan(':method :url :status :response-time ms', {stream: logStream}));
 
 // handle logs 
 app.get('/logs', (req, res) => {
-  res.format({
-    'text/plain': () => res.status(200).send(logger.logs)
-  });
+  Logger.find({}).then(logs => {
+    res.format({
+      'text/plain': () => res.status(200).send(logs.map(log => log.log).join(''))
+    });
+  }).catch(err => res.status(500).json(err));
 });
 
 // handle signup
@@ -222,7 +223,7 @@ app.delete('/deleteuser/:id', auth, (req, res) => {
 // gets all users 
 app.get('/', (req, res) => {
   // get and return all users from database
-  User.find().then(users => {
+  User.find({}).then(users => {
     users = users.map(user => {
       return {
         _id: user._id,
