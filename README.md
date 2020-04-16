@@ -1,4 +1,4 @@
-# live-server 
+# Live Server 
 
 A CRUD server on users that logs every request hosted on heroku with an online MongoDB instance
 
